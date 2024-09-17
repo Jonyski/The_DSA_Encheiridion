@@ -51,6 +51,7 @@ int main(int argc, char const *argv[])
 		pop(stack);
 		print_stack(stack);
 	}
+	free_stack(stack);
 	return 0;
 }
 
@@ -93,4 +94,14 @@ void print_stack(Stack *s) {
 		curr = curr->next;
 	}
 	printf("\n");
+}
+
+void free_stack(Stack *s) {
+	Element *curr = s->head;
+	while(curr) {
+		Element *temp = curr->next;
+		free(curr);
+		curr = temp;
+	}
+	free(s);
 }
