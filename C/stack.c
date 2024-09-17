@@ -36,6 +36,9 @@ int pop(Stack *s);
 void print_stack(Stack *s);
 void free_stack(Stack *s);
 
+//-----------------------------------
+// Main
+//-----------------------------------
 int main(int argc, char const *argv[])
 {
 	srand(time(NULL));
