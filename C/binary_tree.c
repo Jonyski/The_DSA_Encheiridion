@@ -1,0 +1,185 @@
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// In this file we will implement a
+// binary tree and some of it's main
+// algorithms, such as insertion,
+// deletion, search and balancing
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+//-----------------------------------
+// Imports
+//-----------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+//-----------------------------------
+// Structs and typedefs
+//-----------------------------------
+typedef struct aux {
+	int value;
+	struct aux *left;
+	struct aux *right;
+	struct aux *parent;
+} Node;
+
+//-----------------------------------
+// Function prototypes
+//-----------------------------------
+Node *create_bintree(int root_value);
+Node *search(Node *r, int value);
+int insert(Node *r, int value);
+int delete(Node *r, int value);
+Node *find_replacement(Node *r);
+int balance(Node *r);
+void print_bintree(Node *r);
+void print_bintree_values(Node *r);
+void free_bintree(Node *r);
+
+//-----------------------------------
+// Main
+//-----------------------------------
+int main(int argc, char const *argv[])
+{
+	srand(time(NULL));
+	Node *tree = create_bintree(rand()%1000);
+	print_bintree(tree);
+	int values_inserted[20] = { 0 }; // just for testing purposes
+	for(int i = 0; i < 5; i++) {
+		int v = rand()%1000;
+		insert(tree, v);
+		print_bintree(tree);
+		values_inserted[i] = v;
+	}
+	for(int i = 0; i < 5; i++) {
+		//if(rand()%2) {
+			printf("trying to delete %d\n", values_inserted[i]);
+			delete(tree, values_inserted[i]);
+			//print_bintree(tree);
+		//}
+	}
+	return 0;
+}
+
+//-----------------------------------
+// Function definitions
+//-----------------------------------
+Node *create_bintree(int root_value) {
+	Node *root = malloc(sizeof(Node));
+	if(!root) exit(1);
+	*root = (Node) { 0 };
+	root->value = root_value;
+	return root;
+}
+
+Node *search(Node *r, int value) {
+	if(r->value == value) {
+		return r;
+	} else if(r->value > value) {
+		if(!r->left) return NULL;
+		search(r->left, value);
+	} else {
+		if(!r->right) return NULL;
+		search(r->right, value);
+	}
+}
+
+int insert(Node *r, int value) {
+	// blocking repeated values
+	if(r->value == value) return 1;
+
+	if(value < r->value) {
+		if(r->left)
+			insert(r->left, value);
+		else {
+			Node *el = malloc(sizeof(Node));
+			if(!el) return 1;
+			*el = (Node) { 0 };
+			el->value = value;
+			el->parent = r;
+			r->left = el;
+		}
+	} else {
+		if(r->right)
+			insert(r->right, value);
+		else {
+			Node *el = malloc(sizeof(Node));
+			if(!el) return 1;
+			*el = (Node) { 0 };
+			el->value = value;
+			el->parent = r;
+			r->right = el;
+		}
+	}
+	return 0;
+}
+
+int delete(Node *r, int value) {
+	Node *el = search(r, value);
+	if(!el) return 1;
+	// the node being removed has no children
+	if(!el->right && !el->left) {
+		if (el->parent && el->parent->left == el)
+			el->parent->left = NULL;
+		else if(el->parent && el->parent->right == el)
+			el->parent->right = NULL;
+		free(el);
+		return 0;
+	}
+	// the node being removed has only the right child
+	if(!el->left && el->right) {
+		if (el->parent && el->parent->left == el)
+			el->parent->left = el->right;
+		else if(el->parent && el->parent->right == el)
+			el->parent->right = el->right;
+		el->right->parent = el->parent;
+		free(el);
+		return 0;
+	}
+	// the node being removed has only the left child
+	if(el->left && !el->right) {
+		if (el->parent && el->parent->left == el)
+			el->parent->left = el->left;
+		else if(el->parent && el->parent->right == el)
+			el->parent->right = el->left;
+		el->left->parent = el->parent;
+		free(el);
+		return 0;
+	}
+	// the node being removed has both children
+	Node *repl = find_replacement(el);
+	// link the parent to the replacement element
+	if(el->parent && el->parent->left == el)
+		el->parent->left = repl;
+	else if(el->parent && el->parent->right == el)
+		el->parent->right = repl;
+	// re-link the replacement parent to the replacement left-child
+	repl->parent->right = repl->left;
+	if(repl->left && repl->parent != el)
+		repl->left->parent = repl->parent;
+	// make the replacement connect to the nodes el connected to
+	if(el->left) el->left->parent = repl;
+	if(el->right) el->right->parent = repl;
+	repl->right = el->right;
+	repl->left = el->left;
+	repl->parent = el->parent;
+	free(el);
+}
+
+Node *find_replacement(Node *r) {
+	// finding the right-most node in the left sub-tree
+	Node *curr = r->left;
+	while(curr->right) curr = curr->right;
+	return curr;
+}
+
+void print_bintree(Node *r) {
+	printf("binary tree values: ");
+	print_bintree_values(r);
+	printf("\n");
+}
+
+void print_bintree_values(Node *r) {
+	if(r->left) print_bintree_values(r->left);
+	printf("%d ", r->value);
+	if(r->right) print_bintree_values(r->right);
+}
