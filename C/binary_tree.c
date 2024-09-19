@@ -28,7 +28,7 @@ typedef struct aux {
 Node *create_bintree(int root_value);
 Node *search(Node *r, int value);
 int insert(Node *r, int value);
-int delete(Node *r, int value);
+int delete(Node **r, int value);
 Node *find_replacement(Node *r);
 int balance(Node *r);
 void print_bintree(Node *r);
@@ -41,21 +41,22 @@ void free_bintree(Node *r);
 int main(int argc, char const *argv[])
 {
 	srand(time(NULL));
-	Node *tree = create_bintree(rand()%1000);
+	Node *tree = create_bintree(84);
 	print_bintree(tree);
 	int values_inserted[20] = { 0 }; // just for testing purposes
-	for(int i = 0; i < 5; i++) {
+	values_inserted[0] = tree->value;
+	
+	for(int i = 1; i < 20; i++) {
 		int v = rand()%1000;
 		insert(tree, v);
 		print_bintree(tree);
 		values_inserted[i] = v;
 	}
-	for(int i = 0; i < 5; i++) {
-		//if(rand()%2) {
-			printf("trying to delete %d\n", values_inserted[i]);
-			delete(tree, values_inserted[i]);
-			//print_bintree(tree);
-		//}
+	for(int i = 0; i < 20; i++) {
+		if(rand()%2) {
+			delete(&tree, values_inserted[i]);
+			print_bintree(tree);
+		}
 	}
 	return 0;
 }
@@ -72,6 +73,7 @@ Node *create_bintree(int root_value) {
 }
 
 Node *search(Node *r, int value) {
+	if(!r) return NULL;
 	if(r->value == value) {
 		return r;
 	} else if(r->value > value) {
@@ -113,23 +115,35 @@ int insert(Node *r, int value) {
 	return 0;
 }
 
-int delete(Node *r, int value) {
-	Node *el = search(r, value);
+int delete(Node **r, int value) {
+	if(!(*r)) return 1;
+	Node *el = search(*r, value);
 	if(!el) return 1;
 	// the node being removed has no children
 	if(!el->right && !el->left) {
-		if (el->parent && el->parent->left == el)
+		if(!el->parent) {
+			*r = NULL;
+			free(el);
+			return 0;
+		}
+		if (el->parent->left == el)
 			el->parent->left = NULL;
-		else if(el->parent && el->parent->right == el)
+		else if(el->parent->right == el)
 			el->parent->right = NULL;
 		free(el);
 		return 0;
 	}
 	// the node being removed has only the right child
 	if(!el->left && el->right) {
-		if (el->parent && el->parent->left == el)
+		if(!el->parent) {
+			*r = el->right;
+			el->right->parent = NULL;
+			free(el);
+			return 0;
+		}
+		if (el->parent->left == el)
 			el->parent->left = el->right;
-		else if(el->parent && el->parent->right == el)
+		else if(el->parent->right == el)
 			el->parent->right = el->right;
 		el->right->parent = el->parent;
 		free(el);
@@ -137,6 +151,12 @@ int delete(Node *r, int value) {
 	}
 	// the node being removed has only the left child
 	if(el->left && !el->right) {
+		if(!el->parent) {
+			*r = el->left;
+			el->left->parent = NULL;
+			free(el);
+			return 0;
+		}
 		if (el->parent && el->parent->left == el)
 			el->parent->left = el->left;
 		else if(el->parent && el->parent->right == el)
@@ -148,19 +168,28 @@ int delete(Node *r, int value) {
 	// the node being removed has both children
 	Node *repl = find_replacement(el);
 	// link the parent to the replacement element
-	if(el->parent && el->parent->left == el)
-		el->parent->left = repl;
-	else if(el->parent && el->parent->right == el)
-		el->parent->right = repl;
+	if(el->parent) {
+		if(el->parent->left == el)
+			el->parent->left = repl;
+		else if(el->parent->right == el)
+			el->parent->right = repl;
+	} else *r = repl;
 	// re-link the replacement parent to the replacement left-child
-	repl->parent->right = repl->left;
-	if(repl->left && repl->parent != el)
-		repl->left->parent = repl->parent;
+	if (repl->parent != el) {
+	    if(repl->parent->right == repl) {
+	        repl->parent->right = repl->left;
+	    } else if(repl->parent->left == repl) {
+	        repl->parent->left = repl->left;
+	    }
+	    if(repl->left) {
+	        repl->left->parent = repl->parent;
+	    }
+	}
 	// make the replacement connect to the nodes el connected to
-	if(el->left) el->left->parent = repl;
+	if(el->left && el->left != repl) el->left->parent = repl;
 	if(el->right) el->right->parent = repl;
 	repl->right = el->right;
-	repl->left = el->left;
+	repl->left = el->left == repl ? repl->left : el->left;
 	repl->parent = el->parent;
 	free(el);
 }
@@ -179,7 +208,9 @@ void print_bintree(Node *r) {
 }
 
 void print_bintree_values(Node *r) {
-	if(r->left) print_bintree_values(r->left);
-	printf("%d ", r->value);
-	if(r->right) print_bintree_values(r->right);
+	if(r) {
+		if(r->left) print_bintree_values(r->left);
+		printf("%d ", r->value);
+		if(r->right) print_bintree_values(r->right);
+	}
 }
