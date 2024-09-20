@@ -2,7 +2,7 @@
 // In this file we will implement a
 // binary tree and some of it's main
 // algorithms, such as insertion,
-// deletion, search and balancing
+// deletion and search
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 //-----------------------------------
@@ -30,7 +30,6 @@ Node *search(Node *r, int value);
 int insert(Node *r, int value);
 int delete(Node **r, int value);
 Node *find_replacement(Node *r);
-int balance(Node *r);
 void print_bintree(Node *r);
 void print_bintree_values(Node *r);
 void free_bintree(Node *r);
@@ -52,12 +51,14 @@ int main(int argc, char const *argv[])
 		print_bintree(tree);
 		values_inserted[i] = v;
 	}
+	printf("\ndeleting random elements\n");
 	for(int i = 0; i < 20; i++) {
 		if(rand()%2) {
 			delete(&tree, values_inserted[i]);
 			print_bintree(tree);
 		}
 	}
+	free_bintree(tree);
 	return 0;
 }
 
@@ -78,10 +79,10 @@ Node *search(Node *r, int value) {
 		return r;
 	} else if(r->value > value) {
 		if(!r->left) return NULL;
-		search(r->left, value);
+		return search(r->left, value);
 	} else {
 		if(!r->right) return NULL;
-		search(r->right, value);
+		return search(r->right, value);
 	}
 }
 
@@ -192,6 +193,7 @@ int delete(Node **r, int value) {
 	repl->left = el->left == repl ? repl->left : el->left;
 	repl->parent = el->parent;
 	free(el);
+	return 0;
 }
 
 Node *find_replacement(Node *r) {
@@ -212,5 +214,15 @@ void print_bintree_values(Node *r) {
 		if(r->left) print_bintree_values(r->left);
 		printf("%d ", r->value);
 		if(r->right) print_bintree_values(r->right);
+	}
+}
+
+void free_bintree(Node *r) {
+	if(r) {
+		if(r->left) free_bintree(r->left);
+		if(r->right) free_bintree(r->right);
+		if(r->parent && r->parent->right == r) r->parent->right = NULL;
+		if(r->parent && r->parent->left == r) r->parent->left = NULL;
+		free(r);
 	}
 }
