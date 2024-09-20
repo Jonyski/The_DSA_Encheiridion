@@ -41,6 +41,8 @@ int hash(char *key);
 int set(Slot **map, char *key, Element *el);
 Element *get(Slot **map, char *key);
 int delete(Slot **map, char *key);
+int free_chain(Slot *chain);
+int free_map(Slot **map);
 
 
 //-----------------------------------
@@ -73,6 +75,9 @@ int main(int argc, char const *argv[]) {
 		if(el) printf("element found     - key: %s, value: %d\n", el->key, el->value);
 		else   printf("element not found - key: %s\n", keys[i]);
 	}
+	free_map(map);
+	for(int i = 0; i < NUM_OF_KEYS; i++)
+		free(keys[i]);
     return 0;
 }
 
@@ -113,6 +118,7 @@ int set(Slot **map, char *key, Element *el) {
 	if(!slot) return 1;
 	slot->content = el;
 	slot->next = temp;
+	slot->prev = NULL;
 	if(temp) temp->prev = slot;	
 	map[index] = slot;
 	return 0;
@@ -142,5 +148,22 @@ int delete(Slot **map, char *key) {
 	}
 	free(curr->content);
 	free(curr);
+	return 0;
+}
+
+int free_chain(Slot *chain) {
+	if(!chain) return 1;
+	Slot *curr = chain;
+	if(curr->next) free_chain(curr->next);
+	free(curr->content);
+	free(curr);
+	return 0;
+}
+
+int free_map(Slot **map) {
+	if(!map) return 1;
+	for(int i = 0; i < MAP_SIZE; i++)
+		free_chain(map[i]);
+	free(map);
 	return 0;
 }
