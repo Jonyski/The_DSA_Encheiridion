@@ -15,15 +15,6 @@
 #include "double_linked_list.h"
 
 //-----------------------------------
-// Function prototypes
-//-----------------------------------
-List *create_list();
-int insert_value(List *l, int value);
-int remove_value(List *l, int value);
-void print_list(List *l);
-void free_list(List *l);
-
-//-----------------------------------
 // Main
 //-----------------------------------
 int main(int argc, char const *argv[])
