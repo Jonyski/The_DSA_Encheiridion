@@ -11,31 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-//-----------------------------------
-// Structs and typedefs
-//-----------------------------------
-
-typedef struct aux {
-	int value;
-	struct aux *next;
-} Element;
-
-typedef struct {
-	Element *head;
-	int size;
-} Stack;
-
-
-//-----------------------------------
-// Function prototypes
-//-----------------------------------
-Stack *create_stack();
-int push(Stack *s, int value);
-int pop(Stack *s);
-void print_stack(Stack *s);
-void free_stack(Stack *s);
-
+#include "stack.h"
 //-----------------------------------
 // Main
 //-----------------------------------

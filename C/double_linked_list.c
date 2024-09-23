@@ -12,21 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-//-----------------------------------
-// Structs and typedefs
-//-----------------------------------
-typedef struct aux {
-	int value;
-	struct aux *next;
-	struct aux *prev;
-} Element;
-
-typedef struct {
-	Element *head;
-	Element *tail;
-	int len;
-} List;
+#include "double_linked_list.h"
 
 //-----------------------------------
 // Function prototypes
